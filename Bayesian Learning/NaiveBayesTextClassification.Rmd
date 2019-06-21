@@ -1,0 +1,152 @@
+---
+title: "Assignment 1"
+author: "Niall ONeill"
+date: "22 de febrero de 2019"
+output: html_document
+---
+
+#Text classification exercise using the Naive Bayes Classifier
+
+For this exercise I used a subsection of Enron-Spam email dataset from the paper <em>V. Metsis, I. Androutsopoulos and G. Paliouras, "Spam Filtering with 
+Naive Bayes - Which Naive Bayes?". Proceedings of the 3rd Conference 
+on Email and Anti-Spam (CEAS 2006), Mountain View, CA, USA, 2006.</em>. In this dataset there are over 200,000 emails so I have taken a subsection of 5172 pre-processed emails with 3672 ham emails and 1500 spam emails. This particular subset is the folder entitled "Enron1" (found at http://www2.aueb.gr/users/ion/data/enron-spam/) <br>
+
+The email folder has two subfolders called ham and spam. Each folder contains a number of text files, each containing the email contents. \newline
+
+Because of this the first thing we must do is load in the data from the folder into a dataframe which contains the email content and the label of the email. To do this I used the readr library and a function that I wrote which loops through each file in the folders and adds them to a dataframe. 
+
+```{r}
+#Load the readr library
+library(readr)
+
+loadData <- function(type){ 
+  files <- list.files(path=paste("C:/Users/niall/OneDrive/Documents/Big Data Masters/Bayesian Learning/Assignment 1/enron1/",type, sep="") , pattern=paste("*.",type, sep = ""), full.names=TRUE, recursive=FALSE)  #Obtain the filenames for the file directory 
+  
+  emailDf <- data.frame()
+  for (file in files){
+    temp <- read_file(file)  #read the file
+    emailDf <- rbind(emailDf, temp ,stringsAsFactors=FALSE)  #add the file to the dataframe 
+  }
+  typeCol <- rep(type, length(emailDf)) 
+  emailDf <- cbind(typeCol,emailDf) #Add a column which corresponds to the label of the email 
+  colnames(emailDf) <- c("type","text")
+  return(emailDf)
+}
+
+#Run the function for the spam and ham subfolders 
+spam <- loadData("spam")
+ham <- loadData("ham")
+
+#combine both the spam and ham dataframes
+emails <- rbind(spam,ham)
+```
+
+Now that we have our dataframe with the emails and their labels we can start our analysis. To do this we use the text mining library, tm, load our pre-processed emails into a corpus and following this we clean the data from the corpus to prepare it for the classification exercise. 
+
+```{r}
+
+library(tm) #Load the text mining library
+
+corpus <- Corpus(VectorSource(emails$text)) #load the emails in to a corpus
+
+clean_corpus <- tm_map(corpus, tolower) #set all the text to lower case
+
+clean_corpus <- tm_map(clean_corpus, removeNumbers) #remove any numbers
+
+clean_corpus <- tm_map(clean_corpus, removePunctuation) #remove punctuation
+
+clean_corpus <- tm_map(clean_corpus, removeWords, stopwords("en")) #remove stopwords
+
+clean_corpus <- tm_map(clean_corpus, stripWhitespace) #remove whitespace from corpus
+```
+
+
+Next we can look at the most common words in both the ham and spam emails by creating a word cloud. This was done for the words which occur at least 150 times for each type of email.
+
+```{r}
+spam_indices <- which(emails$type == "spam")
+
+ham_indices <- which(emails$type == "ham")
+
+library(wordcloud)
+
+wordcloud(clean_corpus[ham_indices], min.freq=150, scale=c(3,.5)) #ham wordcloud 
+
+wordcloud(clean_corpus[spam_indices], min.freq=150, scale=c(3,.5)) #spam wordcloud
+```
+
+To build a spam filter the corpus data needs to be split into training and test sets. In my case I created a 70/30 split between the training and test datasets. As my data is ordered with all the ham emails appearing before the spam emails I split the data by taking a random sample without replacement. 
+
+```{r}
+
+training_indices <- sample(nrow(emails), size = 3620, replace = FALSE) #take 70% sample
+
+emails_train <- emails[training_indices,] #gather training data
+
+emails_test <- emails[-training_indices,] #use the rest as test data 
+
+corpus_train <- clean_corpus[training_indices] #do the same for the corpus 
+
+corpus_test <- clean_corpus[-training_indices]
+```
+
+Document term matrices are then created for the the training and test sets, using the only the most frequent words found in the training set. 
+
+```{r}
+emails_dtm <- DocumentTermMatrix(clean_corpus) 
+
+dtm_training <- emails_dtm[training_indices,] # Training Data Document Term Matrix
+
+dtm_test <- emails_dtm[-training_indices,] # Test Data Document Term Matrix
+
+five_times_words <- findFreqTerms(dtm_training, 5) # Find only words thats occur 5 times in training set 
+
+length(five_times_words) # 6760 words which occur at least 5 times
+
+#Generate DTM for training corpus using only words from five_times_words
+dtm_training <- DocumentTermMatrix(corpus_train, control=list(dictionary =five_times_words)) 
+
+#Apply the same thing to the test corpus
+dtm_test <- DocumentTermMatrix(corpus_test,control=list(dictionary =five_times_words))
+```
+
+Using a function defined in the lectures each DocumentTermMatrix is altered so that each word if given a value of "Yes" or "No" depending on whether the word appears in the email.
+
+```{r}
+convert_count <- function(x){
+  y <- ifelse(x > 0, 1,0)
+  y <- factor(y, levels=c(0,1), labels=c("No", "Yes"))
+  y
+}
+
+dtm_training <- apply(dtm_training, 2, convert_count)
+
+dtm_test <- apply(dtm_test, 2, convert_count)
+```
+
+A Naive Bayes classifier is built using the library e1071 and the training data. The classifier is then used to make predictions on the test data. 
+
+```{r}
+library(e1071)
+
+classifier <- naiveBayes(dtm_training, emails_train$type)
+
+
+predictions <- predict(classifier, newdata=dtm_test)
+
+table(predictions, emails_test$type)
+```
+
+Using this Naive Bayes classifier on the test set correctly classifies 82% of the spam and 96% of the ham.
+
+A new classifier was then built using a Bayesian approach with Laplacian Smoothing.
+
+```{r}
+B.clas <- naiveBayes(dtm_training, emails_train$type,laplace = 1)
+
+B.preds <- predict(B.clas, newdata=dtm_test)
+
+table(B.preds, emails_test$type)
+```
+
+In this case the classifier correctly identifies 78% of spam and 96% of the ham. Interestingly enough it appears that the Naive Bayes classifier appears to work better than the Bayesian approach for this particular dataset.

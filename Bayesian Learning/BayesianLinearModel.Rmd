@@ -1,0 +1,221 @@
+---
+title: "Assignment2"
+author: "Niall ONeill"
+date: "5 de marzo de 2019"
+output: html_document
+---
+
+#Estimation  of a Bayesian linear (or generalized linear) model for a real data set
+
+For this assignment I have chosen to analyse the Boston Housing Data Set (found in the library mlbench). In this data set, 14 features of 506 different observations are analysed aiming to predict the real valued response of the median value of the home. The features and response that are considered in the dataset are: 
+
+* crim per capita crime rate by town
+* zn	 proportion of residential land zoned for lots over 25,000 sq.ft
+* indus	 proportion of non-retail business acres per town
+* chas	 Charles River dummy variable (= 1 if tract bounds river; 0 otherwise)
+* nox	 nitric oxides concentration (parts per 10 million)
+* rm	 average number of rooms per dwelling
+* age	 proportion of owner-occupied units built prior to 1940
+* dis	 weighted distances to five Boston employment centres
+* rad	 index of accessibility to radial highways
+* tax	 full-value property-tax rate per USD 10,000
+* ptratio	 pupil-teacher ratio by town
+* b	1000(B - 0.63)^2 where B is the proportion of blacks by town
+* lstat	 percentage of lower status of the population
+* medv	 median value of owner-occupied homes in USD 1000's
+
+First the data is loaded into an R dataframe with:
+
+```{r}
+library(mlbench)
+data("BostonHousing")
+head(BostonHousing)
+attach(BostonHousing)
+```
+
+A scatterplot matrix of the predictors can be seen using: 
+
+```{r}
+pairs(BostonHousing)
+```
+
+##Frequentist Approach 
+
+We will first look at the frequentist approach for the dataset and build a linear model for the data. 
+
+```{r}
+freq.model <- lm(medv ~ ., data = BostonHousing)
+summary(freq.model)
+```
+
+Looking at the summary we can see that the features of indus (proportion of non-retail business acres per town) and age (proportion of owner-occupied unites built prior to 1940) do not appear to be significant and can be removed from the model. 
+
+```{r}
+freq.model <- lm(medv ~ . - indus - age, data = BostonHousing)
+summary(freq.model)
+```
+
+As we can now see, all of the parameters appear to be statistically significant and the adjusted R-squared value has increased slightly from the original linear model. 
+
+We can take a look at some diagnostic plots for the linear model to check whether the assumptions for fitting a linear model will hold. 
+
+```{r}
+plot(freq.model)
+```
+
+It appears there may be some questions to be asked about the plots of Residuals vs Fitted and the plot of Scale-Location as there appears to be a slight trend in the fitted values. I attempted to correct this by trying to apply a number of transformations, such as log or inverse transformations, to the parameters and response. I found by looking at the scatterplot matrix that there appeared to be an -log relationship between lstat (percentage of lower status of the population) and the response of medv (median value of the homes). By applying the transformation it appeared to make the trend appear more linear.
+
+```{r}
+plot(-log(lstat), medv)
+```
+
+
+
+Due to this I calculated a new model considering this -log relationship and this appeared to improve the diagnostic graphs. 
+
+```{r}
+freq.model <- lm(medv ~ . - lstat - indus - zn - age + I(-log(lstat)), data = BostonHousing)
+summary(freq.model)
+```
+
+
+```{r}
+plot(freq.model)
+```
+
+Using this model the predicted values were calculated with prediction and confidence intervals and are then plotted plotted along the response so that we could see the predicted and observed values. 
+
+```{r}
+predictions <- predict(freq.model)
+plot(medv, predictions)
+```
+
+We can get the predictive confidence and prediction intervals with: 
+
+```{r}
+conf_int <- predict(freq.model,interval="confidence")
+head(conf_int)
+pred_int <- predict(freq.model,interval="prediction")
+head(pred_int)
+```
+
+Also the confidence intervals for the coefficients with alpha = 0.05 can be seen using: 
+
+```{r}
+confint(freq.model,level=.95)
+```
+
+None of the intervals contain the value of 0 and so each of the coefficients in the model are likely to be statistically significant. 
+
+
+##Bayesian Approach
+
+Next the dataset will be analysed again but with a Bayesian Approach. To do this the library MCMCglmm will be used. 
+
+```{r message = FALSE, warning=FALSE, results = 'hide'}
+library(MCMCglmm)
+bayes.model1 <- MCMCglmm(medv ~  crim + zn + indus + chas + nox + rm + age + dis + rad + tax + ptratio + b + I(-log(lstat)) , data=BostonHousing)
+
+```
+
+We can then inspect the model summary. 
+
+```{r}
+summary(bayes.model1)
+```
+
+As the parameter indus does not appear to be significant, this can be removed in an attempt to improve the model. 
+
+```{r results='hide'}
+bayes.model <- MCMCglmm(medv ~  crim + chas + nox + rm + age + dis + rad + tax + ptratio + b + I(-log(lstat)) , data=BostonHousing)
+
+```
+
+```{r}
+summary(bayes.model)
+```
+
+
+After implementing this Markov Chain Monte Carlo algorithm we can plot the traces of the sampled posterior distribution for each coefficient. 
+
+```{r}
+plot(bayes.model)
+```
+
+
+The posterior samples of the beta coefficients are found with: 
+
+```{r}
+beta=bayes.model$Sol
+```
+
+And with this we can obtain estimates of the beta parameters using the posterior mean. 
+
+```{r}
+colMeans(beta)
+```
+
+We can use the function HPDinterval to obtain the Highest Posterior Density (HPD) intervals. In our case we return the shortest intervals of 0.95 probability 
+
+```{r}
+HPDinterval(beta,0.95)
+```
+
+The posterior sample for the variance is given in the model object with 
+
+```{r}
+sigma2=bayes.model$VCV
+```
+
+We can then use this along with beta to calculate the alternative point estimates using the Maximum a Posteriori (MAP) mode. These are estimates of the marginal parameter modes using kernal density estimation 
+
+
+```{r}
+posterior.mode(beta)
+posterior.mode(sigma2)
+```
+
+And the posterior median is given by: 
+
+```{r}
+apply(beta, 2,median)
+apply(sigma2, 2,median)
+```
+
+As with the frequentrist approach we can generate predictions from our model and plot them with the observed values for the response. 
+
+```{r}
+predictions <- predict(bayes.model)
+plot(medv,predictions)
+```
+
+And likewise we can obtain confidence and prediction intervals with
+
+```{r}
+conf_int_bayes <- predict(bayes.model,interval="confidence")
+head(conf_int_bayes)
+pred_int_bayes <- predict(bayes.model,interval="prediction")
+head(pred_int_bayes)
+```
+
+Finally we can compare models by looking at the deviance information criteria (DIC). With this measurement the model which returns the lowest value is the most promising model. In this case I have evaluated the model which we have analysed above along with two extra models which use predictors which have the largest mean value in our original model. These coefficents are -log(lstat) and rm.
+
+```{r results='hide'}
+bayes.model1<- MCMCglmm(medv ~ I(-log(lstat)) ,data=BostonHousing)
+bayes.model2 <- MCMCglmm(medv ~ rm ,data=BostonHousing)
+
+```
+
+```{r}
+bayes.model$DIC
+bayes.model1$DIC
+bayes.model2$DIC
+```
+
+As we can see the model the original model that we have analysed has the lowest DIC value and is the best model. 
+
+Looking at both the frequentist and the bayesian approaches we can see that the result returned are rather similar due to the fact that we have used noninformative priors.
+
+
+
+
