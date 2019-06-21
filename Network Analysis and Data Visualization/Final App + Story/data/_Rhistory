@@ -1,0 +1,512 @@
+head(tweets$text[polarity<0], n=10)
+texts = removeWords(texts, stopwords("english"))
+texts = removeWords(texts, c("mentalhealthawarenessweek","bebodykind", "mental", "health", "mentalhealth"))
+corpus.texts.all = Corpus(VectorSource(texts))
+corpus.texts.pos = Corpus(VectorSource(texts[polarity>0]))
+corpus.texts.neg = Corpus(VectorSource(texts[polarity<0]))
+wordcloud(corpus.texts.all, max.words=100, random.order= FALSE, colors=brewer.pal(8,"Dark2"),scale = c(3,.5))
+wordcloud(corpus.texts.pos, max.words=100, random.order= FALSE, colors=brewer.pal(8,"Dark2"),scale = c(3,.5))
+wordcloud(corpus.texts.neg, max.words=100, random.order= FALSE, colors=brewer.pal(8,"Dark2"),scale = c(3,.5))
+tweets$text = iconv(tweets$text,"UTF-8","ASCII",sub="") #get rid of emojis, strange caracters
+tweets$text = gsub("\n","",tweets$text) #get rid of end-of-line
+rts = grep("^rt @[a-z0-9_]{1,15}", tolower(tweets$text), perl=T)
+rt.sender = gsub("^.*@([a-z0-9_]{1,15})+.*$", "\\1",tolower(tweets$screen_name[rts]), perl=T)
+rt.receiver = gsub("^rt @([a-z0-9_]{1,15}):+.*$", "\\1", tolower(tweets$text[rts]), perl=T)
+par(mar=c(0,0,0,0))
+edgelist = data.frame(rt.sender, rt.receiver, stringsAsFactors=F)
+g = graph.data.frame(edgelist)
+plot(g, vertex.size=2, edge.arrow.size=.01, asp=5/10, vertex.label.cex=0.5)
+activity = data.frame(table(tolower(tweets$screen_name)))
+colnames(activity) = c("user","ntweets")
+degRT = degree(g, mode="in") #consider only retweets received
+cenRT = page_rank(g)$vector
+influenceRT = data.frame(user=V(g)$name, degRT, cenRT)
+influence = merge(activity, influenceRT)
+head(arrange(influence, desc(cenRT)), n=10)
+head(arrange(influence, desc(ntweets)), n=10)
+head(arrange(activity, desc(ntweets)), n=5)
+head(arrange(activity, desc(ntweets)), n=10)
+texts_rts = rts
+texts_rts = tolower(texts_rts)
+texts_rts = iconv(texts_rts,"UTF-8","latin1",sub="")
+texts_rts = gsub("(RT|via)((?:\\b\\W*@\\w+)+)", "", texts_rts)
+texts_rts = gsub("@\\w+", "", texts_rts)
+texts_rts = gsub("[[:punct:]]", "", texts_rts)
+texts_rts = gsub("[[:digit:]]", "", texts_rts)
+texts_rts = gsub("http\\w+", "", texts_rts)
+texts_rts = gsub("[ \t]{2,}", "", texts_rts)
+texts_rts = gsub("^\\s+|\\s+$", "", texts_rts)
+polarity_rts = get_sentiment(texts_rts, method='bing')
+polarity_rts = get_sentiment(texts_rts, method='bing')
+polarity_rts = get_sentiment(texts_rts, method='bing')
+polarity_rts
+polarity_rts = get_sentiment(texts_rts, method='bing')
+polarity_rts
+ploarity
+polarity_rts = get_sentiment(texts_rts, method='bing')
+polarity_rts
+polarity
+tweets$text = iconv(tweets$text,"UTF-8","ASCII",sub="") #get rid of emojis, strange caracters
+tweets$text = gsub("\n","",tweets$text) #get rid of end-of-line
+rts = grep("^rt @[a-z0-9_]{1,15}", tolower(tweets$text), perl=T)
+rt.sender = tweets$retweet_screen_name[rts]
+rt.receiver = tweets$retweet_text[rts]
+par(mar=c(0,0,0,0))
+edgelist = data.frame(rt.sender, rt.receiver, stringsAsFactors=F)
+g = graph.data.frame(edgelist)
+plot(g, vertex.size=2, edge.arrow.size=.01, asp=5/10, vertex.label.cex=0.5)
+tweets$text = iconv(tweets$text,"UTF-8","ASCII",sub="") #get rid of emojis, strange caracters
+tweets$text = gsub("\n","",tweets$text) #get rid of end-of-line
+rts = grep("^rt @[a-z0-9_]{1,15}", tolower(tweets$text), perl=T)
+rt.sender = tweets$retweet_screen_name[rts]
+rt.receiver = tweets$retweet_name[rts]
+par(mar=c(0,0,0,0))
+edgelist = data.frame(rt.sender, rt.receiver, stringsAsFactors=F)
+g = graph.data.frame(edgelist)
+plot(g, vertex.size=2, edge.arrow.size=.01, asp=5/10, vertex.label.cex=0.5)
+tweets$text = iconv(tweets$text,"UTF-8","ASCII",sub="") #get rid of emojis, strange caracters
+tweets$text = gsub("\n","",tweets$text) #get rid of end-of-line
+rts = grep("^rt @[a-z0-9_]{1,15}", tolower(tweets$text), perl=T)
+rt.sender = tweets$retweet_screen_name[rts]
+rt.receiver = gsub("^rt @([a-z0-9_]{1,15}):+.*$", "\\1", tolower(tweets$text[rts]), perl=T)
+par(mar=c(0,0,0,0))
+edgelist = data.frame(rt.sender, rt.receiver, stringsAsFactors=F)
+g = graph.data.frame(edgelist)
+plot(g, vertex.size=2, edge.arrow.size=.01, asp=5/10, vertex.label.cex=0.5)
+tweets$text = iconv(tweets$text,"UTF-8","ASCII",sub="") #get rid of emojis, strange caracters
+tweets$text = gsub("\n","",tweets$text) #get rid of end-of-line
+rts = grep("^rt @[a-z0-9_]{1,15}", tolower(tweets$text), perl=T)
+rt.sender = tweets$screen_name[rts]
+rt.receiver = tweets$retweet_screen_name[rts]
+par(mar=c(0,0,0,0))
+edgelist = data.frame(rt.sender, rt.receiver, stringsAsFactors=F)
+g = graph.data.frame(edgelist)
+plot(g, vertex.size=2, edge.arrow.size=.01, asp=5/10, vertex.label.cex=0.5)
+tweets$text = iconv(tweets$text,"UTF-8","ASCII",sub="") #get rid of emojis, strange caracters
+tweets$text = gsub("\n","",tweets$text) #get rid of end-of-line
+rts = grep("^rt @[a-z0-9_]{1,15}", tolower(tweets$text), perl=T)
+rt.sender = tweets$retweet_screen_name[rts]
+rt.receiver = tweets$screen_name[rts]
+par(mar=c(0,0,0,0))
+edgelist = data.frame(rt.sender, rt.receiver, stringsAsFactors=F)
+g = graph.data.frame(edgelist)
+plot(g, vertex.size=2, edge.arrow.size=.01, asp=5/10, vertex.label.cex=0.5)
+tweets$text = iconv(tweets$text,"UTF-8","ASCII",sub="") #get rid of emojis, strange caracters
+tweets$text = gsub("\n","",tweets$text) #get rid of end-of-line
+rts = grep("(RT|via)((?:\\b\\W*@\\w+)+)", tweets$text, ignore.case=TRUE)
+rt.retweet = as.list(1:length(rts))
+rt.post = as.list(1:length(rts))
+for (i in 1:length(rts)) {
+tweet = tweets[[rts[i]]]
+poster = str_extract_all(tweet$text, "(RT|via)((?:\\b\\W*@\\w+)+)")
+poster = gsub(":", "", unlist(poster))
+rt.post[[i]] = gsub("(RT @|via @)", "", poster, ignore.case=TRUE)
+rt.retweet[[i]] = rep(tweet$screen_name, length(poster))
+}
+install.packages("stringr")
+knitr::opts_chunk$set(echo = TRUE)
+library(rtweet)
+library(igraph)
+library(dplyr)
+library(syuzhet)
+library(wordcloud)
+library(tm)
+library(stringr)
+setwd("C:/Users/Karolina/Desktop/UC3M/Quarter 4/5 - Network Analysis and Data Visualisation/Assignment 2/")
+tweets$text = iconv(tweets$text,"UTF-8","ASCII",sub="") #get rid of emojis, strange caracters
+tweets$text = gsub("\n","",tweets$text) #get rid of end-of-line
+rts = grep("(RT|via)((?:\\b\\W*@\\w+)+)", tweets$text, ignore.case=TRUE)
+rt.retweet = as.list(1:length(rts))
+rt.post = as.list(1:length(rts))
+for (i in 1:length(rts)) {
+tweet = tweets[[rts[i]]]
+poster = str_extract_all(tweet$text, "(RT|via)((?:\\b\\W*@\\w+)+)")
+poster = gsub(":", "", unlist(poster))
+rt.post[[i]] = gsub("(RT @|via @)", "", poster, ignore.case=TRUE)
+rt.retweet[[i]] = rep(tweet$screen_name, length(poster))
+}
+tweets$text = iconv(tweets$text,"UTF-8","ASCII",sub="") #get rid of emojis, strange caracters
+tweets$text = gsub("\n","",tweets$text) #get rid of end-of-line
+rts = grep("(RT|via)((?:\\b\\W*@\\w+)+)", tweets$text, ignore.case=TRUE)
+rt.retweet = as.list(1:length(rts))
+rt.post = as.list(1:length(rts))
+for (i in 1:length(rts)) {
+tweet = tweets[rts[i]]
+poster = str_extract_all(tweet$text, "(RT|via)((?:\\b\\W*@\\w+)+)")
+poster = gsub(":", "", unlist(poster))
+rt.post[[i]] = gsub("(RT @|via @)", "", poster, ignore.case=TRUE)
+rt.retweet[[i]] = rep(tweet$screen_name, length(poster))
+}
+tweets$text = iconv(tweets$text,"UTF-8","ASCII",sub="") #get rid of emojis, strange caracters
+tweets$text = gsub("\n","",tweets$text) #get rid of end-of-line
+rts = grep("(RT|via)((?:\\b\\W*@\\w+)+)", tweets$text, ignore.case=TRUE)
+rt.retweet = as.list(1:length(rts))
+rt.post = as.list(1:length(rts))
+for (i in 1:length(rts)) {
+tweet = tweets[[rts[i]]]
+tweet$text
+#poster = str_extract_all(tweet$text, "(RT|via)((?:\\b\\W*@\\w+)+)")
+#poster = gsub(":", "", unlist(poster))
+#rt.post[[i]] = gsub("(RT @|via @)", "", poster, ignore.case=TRUE)
+#rt.retweet[[i]] = rep(tweet$screen_name, length(poster))
+}
+tweets$text = iconv(tweets$text,"UTF-8","ASCII",sub="") #get rid of emojis, strange caracters
+tweets$text = gsub("\n","",tweets$text) #get rid of end-of-line
+rts = grep("(RT|via)((?:\\b\\W*@\\w+)+)", tweets$text, ignore.case=TRUE)
+rt.retweet = as.list(1:length(rts))
+rt.post = as.list(1:length(rts))
+for (i in 1:length(rts)) {
+tweet = tweets[[rts[i]]]
+tweet
+#poster = str_extract_all(tweet$text, "(RT|via)((?:\\b\\W*@\\w+)+)")
+#poster = gsub(":", "", unlist(poster))
+#rt.post[[i]] = gsub("(RT @|via @)", "", poster, ignore.case=TRUE)
+#rt.retweet[[i]] = rep(tweet$screen_name, length(poster))
+}
+knitr::opts_chunk$set(echo = TRUE)
+library(rtweet)
+library(igraph)
+library(dplyr)
+library(syuzhet)
+library(wordcloud)
+library(tm)
+setwd("C:/Users/Karolina/Desktop/UC3M/Quarter 4/5 - Network Analysis and Data Visualisation/Assignment 2/")
+tweets$text = iconv(tweets$text,"UTF-8","ASCII",sub="") #get rid of emojis, strange caracters
+tweets$text = gsub("\n","",tweets$text) #get rid of end-of-line
+rts = grep("^rt @[a-z0-9_]{1,15}", tolower(tweets$text), perl=T)
+head(tweets$text[rts])
+rt.sender = gsub("^.*@([a-z0-9_]{1,15})+.*$", "\\1",tolower(tweets$screen_name[rts]), perl=T)
+rt.receiver = gsub("^rt @([a-z0-9_]{1,15}):+.*$", "\\1", tolower(tweets$text[rts]), perl=T)
+tweets$text = iconv(tweets$text,"UTF-8","ASCII",sub="") #get rid of emojis, strange caracters
+tweets$text = gsub("\n","",tweets$text) #get rid of end-of-line
+rts = grep("^rt @[a-z0-9_]{1,15}", tolower(tweets$text), perl=T)
+rt.sender = gsub("^.*@([a-z0-9_]{1,15})+.*$", "\\1",tolower(tweets$screen_name[rts]), perl=T)
+rt.receiver = gsub("^rt @([a-z0-9_]{1,15}):+.*$", "\\1", tolower(tweets$text[rts]), perl=T)
+tweets$text = iconv(tweets$text,"UTF-8","ASCII",sub="") #get rid of emojis, strange caracters
+tweets$text = gsub("\n","",tweets$text) #get rid of end-of-line
+rts = grep("^rt @[a-z0-9_]{1,15}", tolower(tweets$text), perl=T)
+rt.sender = gsub("^.*@([a-z0-9_]{1,15})+.*$", "\\1",tolower(tweets$screen_name[rts]), perl=T)
+rt.receiver = gsub("^rt @([a-z0-9_]{1,15}):+.*$", "\\1", tolower(tweets$text[rts]), perl=T)
+par(mar=c(0,0,0,0))
+edgelist = data.frame(rt.sender, rt.receiver, stringsAsFactors=F)
+g = graph.data.frame(edgelist)
+plot(g, vertex.size=2, edge.arrow.size=.01, asp=5/10, vertex.label.cex=0.5)
+tweets4 = search_tweets("mentalhealthawarenessweek OR bebodykind", n = 5000, lang = "en", retryonratelimit = 2, geocode = lookup_coords("uk"))
+tweets4 = search_tweets("mentalhealthawarenessweek AND bebodykind", n = 5000, lang = "en", retryonratelimit = 2)
+save(tweets4, file="./tweets_mhaw4.RData")
+tweets = get(load("tweets_mhaw4.RData"))
+nrow(tweets)
+texts = tweets$text
+texts = tolower(texts)
+texts = iconv(texts,"UTF-8","latin1",sub="")
+texts = gsub("(RT|via)((?:\\b\\W*@\\w+)+)", "", texts)
+texts = gsub("@\\w+", "", texts)
+texts = gsub("[[:punct:]]", "", texts)
+texts = gsub("[[:digit:]]", "", texts)
+texts = gsub("http\\w+", "", texts)
+texts = gsub("[ \t]{2,}", "", texts)
+texts = gsub("^\\s+|\\s+$", "", texts)
+polarity = get_sentiment(texts, method="bing")
+head(tweets$text[polarity>0], n=10)
+head(tweets$text[polarity<0], n=10)
+texts = removeWords(texts, stopwords("english"))
+texts = removeWords(texts, c("mentalhealthawarenessweek","bebodykind", "mental", "health", "mentalhealth"))
+corpus.texts.all = Corpus(VectorSource(texts))
+corpus.texts.pos = Corpus(VectorSource(texts[polarity>0]))
+corpus.texts.neg = Corpus(VectorSource(texts[polarity<0]))
+wordcloud(corpus.texts.all, max.words=100, random.order= FALSE, colors=brewer.pal(8,"Dark2"),scale = c(3,.5))
+wordcloud(corpus.texts.pos, max.words=100, random.order= FALSE, colors=brewer.pal(8,"Dark2"),scale = c(3,.5))
+wordcloud(corpus.texts.neg, max.words=100, random.order= FALSE, colors=brewer.pal(8,"Dark2"),scale = c(3,.5))
+tweets$text = iconv(tweets$text,"UTF-8","ASCII",sub="") #get rid of emojis, strange caracters
+tweets$text = gsub("\n","",tweets$text) #get rid of end-of-line
+rts = grep("^rt @[a-z0-9_]{1,15}", tolower(tweets$text), perl=T)
+rt.sender = gsub("^.*@([a-z0-9_]{1,15})+.*$", "\\1",tolower(tweets$screen_name[rts]), perl=T)
+rt.receiver = gsub("^rt @([a-z0-9_]{1,15}):+.*$", "\\1", tolower(tweets$text[rts]), perl=T)
+par(mar=c(0,0,0,0))
+edgelist = data.frame(rt.sender, rt.receiver, stringsAsFactors=F)
+g = graph.data.frame(edgelist)
+plot(g, vertex.size=2, edge.arrow.size=.01, asp=5/10, vertex.label.cex=0.5)
+grumpy = search_tweets("grumpycat OR (grumpy AND cat)", n = 5000, lang = "en", retryonratelimit = 2)
+save(grumpy, file="./tweets_grumpy.RData")
+grumpy$text = iconv(grumpy$text,"UTF-8","ASCII",sub="") #get rid of emojis, strange caracters
+grumpy$text = gsub("\n","",grumpy$text) #get rid of end-of-line
+rts = grep("^rt @[a-z0-9_]{1,15}", tolower(grumpy$text), perl=T)
+rt.sender = gsub("^.*@([a-z0-9_]{1,15})+.*$", "\\1",tolower(grumpy$screen_name[rts]), perl=T)
+rt.receiver = gsub("^rt @([a-z0-9_]{1,15}):+.*$", "\\1", tolower(grumpy$text[rts]), perl=T)
+par(mar=c(0,0,0,0))
+edgelist = data.frame(rt.sender, rt.receiver, stringsAsFactors=F)
+g = graph.data.frame(edgelist)
+plot(g, vertex.size=2, edge.arrow.size=.01, asp=5/10, vertex.label.cex=0.5)
+knitr::opts_chunk$set(echo = TRUE)
+library(rtweet)
+library(igraph)
+library(dplyr)
+library(syuzhet)
+library(wordcloud)
+library(tm)
+setwd("C:/Users/Karolina/Desktop/UC3M/Quarter 4/5 - Network Analysis and Data Visualisation/Assignment 2/")
+tweets = get(load("tweets_mhaw4.RData"))
+nrow(tweets)
+texts = tweets$text
+texts = tolower(texts)
+texts = iconv(texts,"UTF-8","latin1",sub="")
+texts = gsub("(RT|via)((?:\\b\\W*@\\w+)+)", "", texts)
+texts = gsub("@\\w+", "", texts)
+texts = gsub("[[:punct:]]", "", texts)
+texts = gsub("[[:digit:]]", "", texts)
+texts = gsub("http\\w+", "", texts)
+texts = gsub("[ \t]{2,}", "", texts)
+texts = gsub("^\\s+|\\s+$", "", texts)
+polarity = get_sentiment(texts, method="bing")
+head(tweets$text[polarity>0], n=10)
+head(tweets$text[polarity<0], n=10)
+texts = removeWords(texts, stopwords("english"))
+texts = removeWords(texts, c("mentalhealthawarenessweek","bebodykind", "mental", "health", "mentalhealth"))
+corpus.texts.all = Corpus(VectorSource(texts))
+corpus.texts.pos = Corpus(VectorSource(texts[polarity>0]))
+corpus.texts.neg = Corpus(VectorSource(texts[polarity<0]))
+wordcloud(corpus.texts.all, max.words=100, random.order= FALSE, colors=brewer.pal(8,"Dark2"),scale = c(3,.5))
+wordcloud(corpus.texts.pos, max.words=100, random.order= FALSE, colors=brewer.pal(8,"Dark2"),scale = c(3,.5))
+wordcloud(corpus.texts.neg, max.words=100, random.order= FALSE, colors=brewer.pal(8,"Dark2"),scale = c(3,.5))
+tweets$text = iconv(tweets$text,"UTF-8","ASCII",sub="") #get rid of emojis, strange caracters
+tweets$text = gsub("\n","",tweets$text) #get rid of end-of-line
+rts = grep("^rt @[a-z0-9_]{1,15}", tolower(tweets$text), perl=T)
+rt.sender = gsub("^.*@([a-z0-9_]{1,15})+.*$", "\\1",tolower(tweets$screen_name[rts]), perl=T)
+rt.receiver = gsub("^rt @([a-z0-9_]{1,15}):+.*$", "\\1", tolower(tweets$text[rts]), perl=T)
+par(mar=c(0,0,0,0))
+edgelist = data.frame(rt.sender, rt.receiver, stringsAsFactors=F)
+g = graph.data.frame(edgelist)
+plot(g, vertex.size=2, edge.arrow.size=.01, asp=5/10, vertex.label.cex=0.5)
+tweets = get(load("tweets_mhaw4.RData"))
+nrow(tweets)
+tweets$text = iconv(tweets$text,"UTF-8","ASCII",sub="") #get rid of emojis, strange caracters
+tweets$text = gsub("\n","",tweets$text) #get rid of end-of-line
+rts = grep("^rt @[a-z0-9_]{1,15}", tolower(tweets$text), perl=T)
+rt.sender = gsub("^.*@([a-z0-9_]{1,15})+.*$", "\\1",tolower(tweets$screen_name[rts]), perl=T)
+rt.receiver = gsub("^rt @([a-z0-9_]{1,15}):+.*$", "\\1", tolower(tweets$text[rts]), perl=T)
+par(mar=c(0,0,0,0))
+edgelist = data.frame(rt.sender, rt.receiver, stringsAsFactors=F)
+g = graph.data.frame(edgelist)
+plot(g, vertex.size=2, edge.arrow.size=.01, asp=5/10, vertex.label.cex=0.5)
+tweets = search_tweets("mentalhealthawarenessweek AND bebodykind", n = 5000, lang = "en", retryonratelimit = 2)
+save(tweets, file="./tweets_mhaw5.RData")
+tweets$text = iconv(tweets$text,"UTF-8","ASCII",sub="") #get rid of emojis, strange caracters
+tweets$text = gsub("\n","",tweets$text) #get rid of end-of-line
+rts = grep("^rt @[a-z0-9_]{1,15}", tolower(tweets$text), perl=T)
+rt.sender = gsub("^.*@([a-z0-9_]{1,15})+.*$", "\\1",tolower(tweets$screen_name[rts]), perl=T)
+rt.receiver = gsub("^rt @([a-z0-9_]{1,15}):+.*$", "\\1", tolower(tweets$text[rts]), perl=T)
+par(mar=c(0,0,0,0))
+edgelist = data.frame(rt.sender, rt.receiver, stringsAsFactors=F)
+g = graph.data.frame(edgelist)
+plot(g, vertex.size=2, edge.arrow.size=.01, asp=5/10, vertex.label.cex=0.5)
+tweets = search_tweets("mentalhealthawarenessweek OR bebodykind", n = 5000, lang = "en", retryonratelimit = 2)
+save(tweets, file="./tweets_mhaw5.RData")
+tweets$text = iconv(tweets$text,"UTF-8","ASCII",sub="") #get rid of emojis, strange caracters
+tweets$text = gsub("\n","",tweets$text) #get rid of end-of-line
+rts = grep("^rt @[a-z0-9_]{1,15}", tolower(tweets$text), perl=T)
+rt.sender = gsub("^.*@([a-z0-9_]{1,15})+.*$", "\\1",tolower(tweets$screen_name[rts]), perl=T)
+rt.receiver = gsub("^rt @([a-z0-9_]{1,15}):+.*$", "\\1", tolower(tweets$text[rts]), perl=T)
+par(mar=c(0,0,0,0))
+edgelist = data.frame(rt.sender, rt.receiver, stringsAsFactors=F)
+g = graph.data.frame(edgelist)
+plot(g, vertex.size=2, edge.arrow.size=.01, asp=5/10, vertex.label.cex=0.5)
+rt.sender
+rt.receiver
+rt.receiver = gsub("^rt @([a-z0-9_]{1,15})+.*$", "\\1", tolower(tweets$text[rts]), perl=T)
+rt.receiver
+par(mar=c(0,0,0,0))
+edgelist = data.frame(rt.sender, rt.receiver, stringsAsFactors=F)
+g = graph.data.frame(edgelist)
+plot(g, vertex.size=2, edge.arrow.size=.01, asp=5/10, vertex.label.cex=0.5)
+rt.sender1 = tolower(tweets$screen_name[rts])
+rt.receiver1 = tolower(tweets$retweet_screen_name[rts])
+par(mar=c(0,0,0,0))
+edgelist = data.frame(rt.sender1, rt.receiver1, stringsAsFactors=F)
+g = graph.data.frame(edgelist)
+plot(g, vertex.size=2, edge.arrow.size=.01, asp=5/10, vertex.label.cex=0.5)
+tweets$retweet_count
+tweets$retweet_name
+tweets$retweet_screen_name
+par(mar=c(0,0,0,0))
+edgelist = data.frame(rt.sender, rt.receiver, stringsAsFactors=F)
+g = graph.data.frame(edgelist)
+plot(g, vertex.size=2, edge.arrow.size=.01, asp=5/10, vertex.label.cex=0.5)
+rt.sender1 = rts$screen_name
+rt.receiver1 = rts$retweet_screen_name
+par(mar=c(0,0,0,0))
+edgelist = data.frame(rt.sender1, rt.receiver1, stringsAsFactors=F)
+g = graph.data.frame(edgelist)
+plot(g, vertex.size=2, edge.arrow.size=.01, asp=5/10, vertex.label.cex=0.5)
+rts = tweets[tweets$is_retweet,]
+rt.sender1 = rts$screen_name
+rt.receiver1 = rts$retweet_screen_name
+par(mar=c(0,0,0,0))
+edgelist = data.frame(rt.sender1, rt.receiver1, stringsAsFactors=F)
+g = graph.data.frame(edgelist)
+plot(g, vertex.size=2, edge.arrow.size=.01, asp=5/10, vertex.label.cex=0.5)
+knitr::opts_chunk$set(echo = TRUE)
+library(rtweet)
+library(igraph)
+library(dplyr)
+library(syuzhet)
+library(wordcloud)
+library(tm)
+setwd("C:/Users/Karolina/Desktop/UC3M/Quarter 4/5 - Network Analysis and Data Visualisation/Assignment 2/")
+tweets = get(load("tweets_mhaw4.RData"))
+nrow(tweets)
+tweets = search_tweets("mentalhealthawarenessweek AND bebodykind", n = 5000, lang = "en", retryonratelimit = 2)
+save(tweets, file="./tweets_mhaw5.RData")
+rts = tweets[tweets$is_retweet,]
+rt.sender1 = rts$screen_name
+rt.receiver1 = rts$retweet_screen_name
+par(mar=c(0,0,0,0))
+edgelist = data.frame(rt.sender1, rt.receiver1, stringsAsFactors=F)
+g = graph.data.frame(edgelist)
+plot(g, vertex.size=2, edge.arrow.size=.01, asp=5/10, vertex.label.cex=0.5)
+tweets = get(load("tweets_mhaw.RData"))
+nrow(tweets)
+texts = tweets$text
+texts = tolower(texts)
+texts = iconv(texts,"UTF-8","latin1",sub="")
+texts = gsub("(RT|via)((?:\\b\\W*@\\w+)+)", "", texts)
+texts = gsub("@\\w+", "", texts)
+texts = gsub("[[:punct:]]", "", texts)
+texts = gsub("[[:digit:]]", "", texts)
+texts = gsub("http\\w+", "", texts)
+texts = gsub("[ \t]{2,}", "", texts)
+texts = gsub("^\\s+|\\s+$", "", texts)
+polarity = get_sentiment(texts, method="bing")
+head(tweets$text[polarity>0], n=10)
+head(tweets$text[polarity<0], n=10)
+texts = removeWords(texts, stopwords("english"))
+texts = removeWords(texts, c("mentalhealthawarenessweek","bebodykind", "mental", "health", "mentalhealth"))
+corpus.texts.all = Corpus(VectorSource(texts))
+corpus.texts.pos = Corpus(VectorSource(texts[polarity>0]))
+corpus.texts.neg = Corpus(VectorSource(texts[polarity<0]))
+wordcloud(corpus.texts.all, max.words=100, random.order= FALSE, colors=brewer.pal(8,"Dark2"),scale = c(3,.5))
+wordcloud(corpus.texts.pos, max.words=100, random.order= FALSE, colors=brewer.pal(8,"Dark2"),scale = c(3,.5))
+wordcloud(corpus.texts.neg, max.words=100, random.order= FALSE, colors=brewer.pal(8,"Dark2"),scale = c(3,.5))
+tweets$text = iconv(tweets$text,"UTF-8","ASCII",sub="") #get rid of emojis, strange caracters
+tweets$text = gsub("\n","",tweets$text) #get rid of end-of-line
+rts = tweets[tweets$is_retweet,]
+rt.sender = rts$screen_name
+rt.receiver = rts$retweet_screen_name
+nrow(rts)
+edgelist = data.frame(rt.sender, rt.receiver, stringsAsFactors=F)
+g = graph.data.frame(edgelist)
+cc = clusters(g)
+g0 = delete.vertices(g, which(cc$membership != which.max(cc$csize)))
+par(mar=c(0,0,0,0))
+plot(g0, vertex.size=2, edge.arrow.size=.01, asp=5/10, vertex.label.cex=0.5)
+activity = data.frame(table(tolower(tweets$screen_name)))
+colnames(activity) = c("user","ntweets")
+degRT = degree(g, mode="in") #consider only retweets received
+cenRT = page_rank(g)$vector
+influenceRT = data.frame(user=V(g)$name, degRT, cenRT)
+influence = merge(activity, influenceRT)
+head(arrange(influence, desc(cenRT)), n=10)
+head(arrange(influence, desc(ntweets)), n=10)
+plot(influence$ntweets, influence$cenRT,log="xy")
+head(arrange(activity, desc(ntweets)), n=10)
+polarity
+pol = data.frame(tweets$screen_name, polarity)
+colnames(pol) = c('user', 'polarity')
+print(pol)
+pol = data.frame(tweets$screen_name, polarity)
+colnames(pol) = c('user', 'polarity')
+aggregate(pol[,1], list(pol$user), mean)
+pol = data.frame(tweets$screen_name, polarity)
+colnames(pol) = c('user', 'polarity')
+pol %>%
+group_by(user) %>%
+summarise_at(polarity, funs(mean(., na.rm=TRUE)))
+pol = data.frame(tweets$screen_name, polarity)
+colnames(pol) = c('user', 'polarity')
+pol %>%
+group_by(user) %>%
+summarise_at(vars(polarity), funs(mean(., na.rm=TRUE)))
+print(pol)
+pol = data.frame(tweets$screen_name, polarity)
+colnames(pol) = c('user', 'polarity')
+pol %>%
+group_by(user) %>%
+pol = summarise_at(vars(polarity), funs(mean(., na.rm=TRUE)))
+pol = data.frame(tweets$screen_name, polarity)
+colnames(pol) = c('user', 'polarity')
+pol %>%
+group_by(user) %>%
+pol = summarise_at(vars(polarity), funs(mean(., na.rm=TRUE)))
+install.packages("plyr")
+knitr::opts_chunk$set(echo = TRUE)
+library(rtweet)
+library(igraph)
+library(dplyr)
+library(plyr)
+library(syuzhet)
+library(wordcloud)
+library(tm)
+setwd("C:/Users/Karolina/Desktop/UC3M/Quarter 4/5 - Network Analysis and Data Visualisation/Assignment 2/")
+pol = data.frame(tweets$screen_name, polarity)
+colnames(pol) = c('user', 'polarity')
+pol = ddply(pol, .(user), summarize, polarity = mean(polarity))
+print(pol)
+pol = data.frame(tweets$screen_name, polarity)
+colnames(pol) = c('user', 'polarity')
+pol = ddply(pol, .(user), summarize, polarity = mean(polarity))
+all_influence = merge(influence, pol)
+head(arrange(all_influence, desc(polarity)), n=10)
+plot(all_influence$polarity, all_influence$cenRT,log="xy")
+cor(all_influence$polarity, all_influence$cenRT)
+plot(all_influence$polarity, all_influence$cenRT)
+plot(all_influence$polarity, all_influence$cenRT, log="y")
+shiny::runApp('C:/Users/Karolina/Desktop/UC3M/Quarter 4/5 - Network Analysis and Data Visualisation/Final Project')
+runApp('C:/Users/Karolina/Desktop/UC3M/Quarter 4/5 - Network Analysis and Data Visualisation/Final Project')
+runApp('C:/Users/Karolina/Desktop/UC3M/Quarter 4/5 - Network Analysis and Data Visualisation/Final Project')
+runApp('C:/Users/Karolina/Desktop/UC3M/Quarter 4/5 - Network Analysis and Data Visualisation/Final Project')
+runApp('C:/Users/Karolina/Desktop/UC3M/Quarter 4/5 - Network Analysis and Data Visualisation/Final Project')
+shiny::runApp('C:/Users/Karolina/Downloads/Niall App/HeatmapApp')
+runApp('C:/Users/Karolina/Downloads/Niall App/HeatmapApp')
+runApp('C:/Users/Karolina/Downloads/Niall App/HeatmapApp')
+runApp('C:/Users/Karolina/Downloads/Niall App/HeatmapApp')
+tabl = as.data.table(formatted_data)
+install.packages("data.table")
+tabl = as.data.table(formatted_data)
+library(data.table)
+tabl = as.data.table(formatted_data)
+runApp('C:/Users/Karolina/Downloads/Niall App/HeatmapApp')
+library(dplyr)
+View(grumpy)
+setwd("C:/Users/Karolina/Downloads/Niall App/data")
+formatted_data = read.csv("formatted_data_ts.csv", header=TRUE, sep=",")
+formatted_data$Date = as.Date(formatted_data$Date, format="%Y-%m-%d")
+filtered = formatted_data[which(formatted_data$Gas==4
+& year(formatted_data$Date)==2001),]
+summary = filtered %>%
+group_by(Station, year(Date)) %>%
+summarise()
+filtered %>%
+group_by(Station, year(Date))
+filtered %>%
+group_by(Station)
+formatted_data = read.csv("formatted_data_ts.csv", header=TRUE, sep=",")
+formatted_data$Date = as.Date(formatted_data$Date, format="%Y-%m-%d")
+filtered = formatted_data[which(formatted_data$Gas==4
+& year(formatted_data$Date)==2001),]
+filtered = formatted_data[which(formatted_data$Gas==1
+& year(formatted_data$Date)==2001),]
+filtered %>%
+group_by(Station)
+filtered %>%
+group_by(Station) %>%
+summarise(High = max(Value), Low = min(Value), Avg = mean(Value))
+runApp('C:/Users/Karolina/Downloads/Niall App/HeatmapApp')
+runApp('C:/Users/Karolina/Downloads/Niall App/HeatmapApp')
+install.packages("rsconnect")
+library(rsconnect)
+rsconnect::setAccountInfo(name='ks100392576',
+token='2BC35647461384B2D7C9EFDEA8A20F9E',
+secret='xtUnlJixI4yV4DYJP8fEo8Mr+Ojj681YSlYV/mPb')
+library(rsconnect)
+rsconnect::deployApp('C:/users/karolina/Downloads/Niall App')
+library(rsconnect)
+rsconnect::deployApp('C:/users/karolina/Downloads/Niall App/Heatmapapp')
