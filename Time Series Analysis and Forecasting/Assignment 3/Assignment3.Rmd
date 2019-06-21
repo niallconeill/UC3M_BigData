@@ -1,0 +1,299 @@
+---
+title: "Assignment 3"
+author: "Niall ONeill"
+date: "21 de febrero de 2019"
+output: html_document
+---
+
+#Dynamic Models for Prediction 
+
+First we load the relevant librarys. 
+
+```{r message=FALSE, warning=FALSE}
+library(fpp)
+```
+
+##Exercise 1
+
+<strong>For the following series, find an appropriate Box-Cox transformation and order of
+differencing in order to obtain stationary data.<br>
+(a) enplanements <br>
+(b) visitors </strong>
+
+(a) We can see the data in its original form below. 
+
+```{r}
+plot(enplanements, ylab = "Enplanements", xlab = "Time", main = "Monthly US Domestic Enplanements")
+```
+
+Looking at the data it is not stationary as it has an upward trend, seasonality and also the variance appears to be increasing with time as well. 
+
+First we apply a Box-Cox transformation to the data.
+
+```{r}
+lambda <- BoxCox.lambda(enplanements)
+enplanementsbc <- BoxCox(enplanements, lambda = lambda)
+
+plot(enplanementsbc, ylab = "Enplanements", xlab = "Time", main = "Monthly US Domestic Enplanements Box-Cox Transform")
+
+```
+
+Next we try to make the data stationary. A differencing is applied t the transformed data. 
+
+```{r}
+enplanementsdiff <- diff(enplanementsbc, lag = 12)
+plot(enplanementsdiff)
+Acf(enplanementsdiff, lag.max = 100)
+```
+
+Looking at the data does not yet resemble white noise and is not stationary. To correct this a second-order differencing is applied to the data. 
+
+```{r}
+enplanements2nddiff <- diff(enplanementsdiff, lag = 1)
+plot(enplanements2nddiff)
+Acf(enplanements2nddiff, lag.max = 100)
+```
+
+Now the data appears to look more stationary however there is still one part of large variance in 2001. 
+
+(b) Looking at the visitors dataset. 
+
+```{r}
+plot(visitors, ylab = "Number of Visitors", xlab = "Time", main = "Monthly Australian Overseas Visitors")
+```
+
+Once again we find an upward trend with year long seasonality and increasing variance with time. 
+
+We apply the Box-Cox transformation to the data. 
+
+```{r}
+lambda <- BoxCox.lambda(visitors)
+visitorsbc <- BoxCox(visitors, lambda = lambda)
+plot(visitorsbc)
+```
+
+Next differencing is applied to the transformed data with a lag of 12.
+
+```{r}
+visitorsdiff <- diff(visitorsbc, lag = 12)
+plot(visitorsdiff)
+Acf(visitorsdiff, lag.max = 100)
+```
+
+Once again the data appears that it could benefit from a second order differencing being applied to the data. 
+
+```{r}
+visitors2nddiff <- diff(visitorsdiff, lag = 1)
+plot(visitors2nddiff)
+Acf(visitors2nddiff, lag.max = 100)
+```
+
+Now the data appears to look like a stationary dataset. 
+
+##Exercise 2
+
+<strong>For the time series uselec:<br>
+(a) Do the data need transforming? If so, find a suitable transformation.<br>
+(b) Are the data stationary? If not, find an appropriate differencing which yields stationary data.<br>
+(c) Identify a couple of ARIMA models that might be useful in describing the time series. Which
+of your models is the best according to their AIC values?<br>
+(d) Estimate the parameters of your best model and do diagnostic testing on the residuals. Do the
+residuals resemble white noise? If not, try to find another ARIMA model which fits better.<br>
+(e) Forecast the next 24 months of data using your preferred model.<br>
+(f) Compare the forecasts obtained using ets().<br>
+(g) Try using a non-seasonal model applied to the seasonally adjusted data obtained from STL. The
+stlf() function will make the calculations easy (with method="arima"). Compare the forecasts
+with those obtained in the previous steps. Which do you think is the best approach?</strong>
+
+(a) First we plot the data for uselec. 
+
+```{r}
+plot(uselec, xlab = "Time", ylab="Total Generation of Electricity", main= "Monthly Total Generation of Electricity in the US")
+```
+
+Looking at the graph it appears that the variance is increasing with time. Applying a Box-Cox transformation could improve this. 
+
+```{r}
+lambda <- BoxCox.lambda(uselec)
+uselecBC <- BoxCox(uselec,lambda)
+
+plot(uselecBC)
+```
+
+(b) The data is not stationary as there is an upward trend and seasonality. Applying differencing we get. 
+
+```{r}
+uselecdiff <- diff(uselecBC, lag = 12)
+plot(uselecdiff)
+Acf(uselecdiff, lag.max = 100)
+```
+
+After the first application of differencing the data still doesn't appear to be stationary so second order differencing is used to remove seasonality.
+
+```{r}
+uselec2nddiff <- diff(uselecdiff, lag = 1)
+plot(uselec2nddiff)
+Acf(uselec2nddiff, lag.max = 100)
+```
+
+(c) Now that we have the data in a form that appears stationary we can analyse the PACF to determine which ARIMA models would be nice to try 
+
+```{r}
+tsdisplay(uselec2nddiff, main="")
+```
+
+Looking at the ACF there are 2 spikes at the beginning which suggests that models of ARIMA(0,d,2) could be appropriate. I then tried a number of variations of these. There are also spikes at 12 and 24 which suggests we should look at seasonal ARIMA models.
+
+```{r}
+Arima(uselec2nddiff, order = c(0,0,2), seasonal = c(0,0,1))
+```
+
+```{r}
+Arima(uselec2nddiff,order = c(0,1,2), seasonal = c(1,0,0))
+```
+
+```{r}
+Arima(uselec2nddiff, order = c(0,0,2), seasonal = c(0,0,3))
+```
+
+After trying a number of different models the model with the lowest AICc is Arima(0,0,2)(0,0,3)$_1$$_2$
+
+(d) The coefficients for the best model can be seen using. 
+
+```{r}
+model <- Arima(uselec2nddiff, order = c(0,0,2), seasonal = c(0,0,3))
+model
+```
+
+Then a check is done to confirm whether the residuals resemble white noise. 
+
+```{r}
+tsdisplay(residuals(model))
+Box.test(residuals(model), lag = 36, fitdf = 6, type = "Ljung")
+```
+
+The Ljung test returns a p-value of 0.9296 which means that the residuals resemble white noise. 
+
+
+(e) The next 24 months are forecasted for the chosen model. 
+
+```{r}
+plot(forecast(model, h=24))
+```
+
+(f) Forecast for the next 24 months using and ETS model produces. 
+
+```{r}
+plot(forecast(ets(uselec), h=24))
+```
+
+From looking at the two models it appears to that the ETS model gives the more realistic forecasts.
+
+(g) Forecasts using stlf() are calculated.
+
+```{r}
+stlfModel <- stlf(uselec, method = "arima", lambda = BoxCox.lambda(uselec), h=24)
+plot(stlfModel)
+```
+
+Looking at the three approaches I believe that STLF method gives the best forecasts. The forecasts for the STLF model and the ETS model are similar however the STLF model continues the upward trend displayed by the previous data which leads me to say that this method is more promising.
+
+##Exercise 3
+
+<strong>Use R to simulate and plot some data from simple ARIMA models.<br>
+(a) Generate data from an AR(1) model with $\phi$$_1$ = 0.6 and $\sigma$$^2$ = 1. The process starts with y$_0$ = 0.
+Hint: use and modify the R code below to answer this and the following questions<br>
+y <- ts(numeric(100)) <br>
+e <- rnorm(100)<br>
+for(i in 1:100)<br>
+y[i] <- 0.6*y[i-1] + e[i]<br>
+(b) Produce a time plot for the series. How does the plot change as you change  $\phi$$_1$?<br>
+(c) Write your own code to generate data from an MA(1) model with  $\theta$$_1$ = 0.6 and $\sigma$$^2$ = 1. Start
+with e$_0$ = 0.<br>
+(d) Produce a time plot for the series. How does the plot change as you change $\theta$$_1$?<br>
+(e) Generate data from an ARMA(1,1) model with $\phi$$_1$ = 0.6 and $\theta$$_1$ = 0.6 and $\sigma$$^2$ = 1. Start with
+y$_0$ = 0 and e$_0$ = 0.<br>
+(f) Generate data from an AR(2) model with $\phi$$_1$ = -0.8 and $\phi$$_2$ = 0.3 and $\sigma$$^2$ = 1. Start with
+y$_0$ = y$_-$$_1$ = 0.<br>
+(g) Graph the latter two series and compare them.</strong>
+
+(a) The example code is used to generate the data from AR(1) model with $\phi$$_1$ = 0.6
+
+```{r}
+y <- ts(numeric(100))
+e <- rnorm(100)
+for(i in 2:100){
+  y[i] <- 0.6*y[i-1] + e[i]
+}
+```
+
+(b) To compare the change in $\phi$$_1$ values we can put the above code into a function, run it for different values of $\phi$$_1$ and plot the results. 
+
+```{r}
+Ar1 <- function(phi){
+  y <- ts(numeric(100))
+  e <- rnorm(100)
+  for(i in 2:100){
+    y[i] <- phi*y[i-1] + e[i]
+  }
+  return(y)
+}
+
+plot(Ar1(0.9), ylab = "y")
+lines(Ar1(0.6), col = "blue")
+lines(Ar1(0.3), col = "red")
+```
+
+(c) The equation for a MA(1) model is of the form y$_i$ = $\theta$e$_i$$_-$$_1$ + e$_i$
+
+```{r}
+Ma1 <- function(theta){
+  y <- ts(numeric(100))
+  e <- rnorm(100)
+  for(i in 2:100){
+    y[i] <- theta*e[i-1] + e[i]
+  }
+  return(y)
+}
+
+fit <- Ma1(0.6)
+```
+
+
+(d) 
+
+```{r}
+plot(Ma1(0.9), ylab="y")
+lines(Ma1(0.6), col = "blue")
+lines(Ma1(0.3), col = "red")
+```
+
+(e) ARMA models contain both the lagged values of y$_t$ and the lagged errors e$_t$
+
+```{r}
+y_arma <- ts(numeric(100))
+e <- rnorm(100)
+for(i in 2:100){
+  y_arma[i] <- 0.6*y_arma[i-1] + 0.6*e[i-1] + e[i]
+}
+
+```
+
+(f) AR(2) model can be formulated with y$_i$ = $\phi$$_1$y$_i$$_-$$_1$ + $\phi$$_2$y$_i$$_-$$_2$+ e$_i$
+
+```{r}
+y_ar2 <- ts(numeric(100))
+e <- rnorm(100)
+for(i in 3:100){
+  y_ar2[i] <- -0.8*y_ar2[i-1] + 0.3*y_ar2[i-2] + e[i]
+}
+```
+
+(g)
+
+```{r}
+plot(y_ar2, ylab="y")
+lines(y_arma, col = "red")
+```
+
+The AR(2) model appears to be oscillating with increasing variation with time while the ARMA(1,1) model apprears to be stationary 

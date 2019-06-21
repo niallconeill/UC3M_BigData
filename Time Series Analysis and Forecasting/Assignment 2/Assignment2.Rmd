@@ -1,0 +1,219 @@
+---
+title: "Assignment 2"
+author: "Niall ONeill"
+date: "15 de febrero de 2019"
+output: html_document
+---
+
+#Dynamic Models for Prediction 
+
+##Exercise 1
+
+<strong> Data set books contains the daily sales of paperback and hardcover books at the same store. The task
+is to forecast the next four days' sales for paperback books (data set books). <br>
+
+(a) Plot the series and discuss the main features of the data.
+
+(b) Use simple exponential smoothing with the ses function (setting initial=simple) and explore
+different values of $\alpha$ for the paperback series. Record the within-sample SSE for the one-step
+forecasts. Plot SSE against $\alpha$ and find which value of $\alpha$ works best. What is the effect of $\alpha$ on
+the forecasts?
+(c) Now let ses select the optimal value of $\alpha$. Use this value to generate forecasts for the next four
+days. Compare your results with (b). </strong>
+
+We load in the datasets and the relevant libraries: 
+
+```{r message=FALSE, warning=FALSE}
+library(fpp)
+
+```
+
+
+(a) We can plot the dataset with: 
+
+```{r}
+plot(books, ylab= "Number of Sales", xlab="Days", main="Daily Sales of Books")
+```
+
+For both the paperback and the hardcover data there is a positive trend. In addition it appears that the data may be cyclical but it doesn't appear to have a regular seasonality.
+
+(b) We can calculate the SES for one-step forecast  and the SSE using different values of alpha using: 
+```{r}
+fit1 <- ses(books[,1], alpha = 0.2, initial = "simple", h = 4)
+sse1 <- sum(books[,1] - fitted(fit1))
+fit2 <- ses(books[,1], alpha = 0.3, initial = "simple", h = 4)
+sse2 <- sum(books[,1] - fitted(fit2))
+fit3 <- ses(books[,1], alpha = 0.4, initial = "simple", h = 4)
+sse3 <- sum(books[,1] - fitted(fit3))
+fit4 <- ses(books[,1], alpha = 0.5, initial = "simple", h = 4)
+sse4 <- sum(books[,1] - fitted(fit4))
+fit5 <- ses(books[,1], alpha = 0.6, initial = "simple", h = 4)
+sse5 <- sum(books[,1] - fitted(fit5))
+fit6 <- ses(books[,1], alpha = 0.7, initial = "simple", h = 4)
+sse6 <- sum(books[,1] - fitted(fit6))
+fit7 <- ses(books[,1], alpha = 0.8, initial = "simple", h = 4)
+sse7 <- sum(books[,1] - fitted(fit7))
+fit8 <- ses(books[,1], alpha = 0.9, initial = "simple", h = 4)
+sse8 <- sum(books[,1] - fitted(fit8))
+fitMin <-ses(books[,1], alpha = 0.75, initial = "simple", h = 4)
+sseMin <- sum(books[,1] - fitted(fitMin))
+```
+
+We can then plot the SSE against the values for alpha: 
+
+```{r}
+alpha <- c(0.2,0.3,0.4,0.5,0.6,0.7,0.75,0.8,0.9)
+sse <- c(sse1,sse2,sse3,sse4,sse5,sse6,sseMin,sse7,sse8)
+
+ plot(alpha,sse, ylab="SSE", xlab = "Alpha",type = "o" )
+
+```
+
+Looking at the graph it appears that increasing the alpha value decreases the SSE until it reaches a minimum at alpha = 0.75.
+
+(c) To generate a fit for the data using ses with an optimal value of alpha we use: 
+
+```{r}
+fitOpt <- ses(books[,1], initial = "simple", h = 4)
+
+plot(fitOpt, PI=FALSE, ylab="Number of Book Sales",
+     xlab="Day", main ="Number of Paperback Books Sold Daily", fcol="white", type="o")
+
+lines(fitOpt$fitted, col="blue", type="o")
+lines(fitMin$fitted, col="red", type="o")
+
+lines(fitOpt$mean, col="blue", type="o")
+lines(fitMin$mean, col="red", type="o")
+
+legend("bottomright",lty=1, col=c(1,"blue","red"), c("data", expression(alpha == 0.21), expression(alpha == 0.75)),pch=1)
+```
+
+The optimal value of alpha makes more conservative predictions and does not appear to fit the data as well as the best alpha value that we calcaulated in part (b)
+
+##Exercise 2
+
+<strong>Use the monthly Australian short-term overseas visitors data, May 1985-April 2005. (Data set
+visitors)<br>
+
+(a) Make a time plot of your data and describe the main features of the series.
+
+(b) Forecast the next two years using Holt-Winters' multiplicative method.
+
+(c) Why is multiplicative seasonality necessary here?
+
+(d) Experiment with making the trend exponential and/or damped.
+
+(e) Now fit each of the following models to the same data:
+(1) an ETS model
+(2) an additive ETS model applied to a Box-Cox transformed series
+(3) an STL decomposition applied to the Box-Cox transformed data followed by an ETS model
+applied to the seasonally adjusted (transformed) data. Plot all the forecasts together.
+
+(g) For each model, look at the residual diagnostics and compare the forecasts for the next two
+years. Which do you prefer?</strong>
+
+(a) The data is plotted with: 
+
+```{r}
+plot(visitors, xlab = "Time", ylab = "Overseas Visitors", main = "Monthly Australian Short-term Overseas Visitors")
+```
+
+Looking at the graph it has an upward trend and apprears to have a seasonality and the variance of the data increases with time
+
+(b) 
+
+```{r}
+fit <-  hw(visitors,seasonal="multiplicative", h=24)
+```
+
+(c) Multiplicative seasonality is needed here as the variance in the dataset changes with time 
+
+(d) We can calculate the damped/exponential forecasts with: 
+
+```{r}
+fitDamped <- hw(visitors, seasonal='multiplicative', h=24, damped=TRUE)
+fitExp <- hw(visitors,seasonal='multiplicative', h=24, exponential=TRUE)
+```
+
+(e)(1) We can fit and ETS model to the data using: 
+
+```{r}
+fitEts <- ets(visitors)
+```
+
+(2) A Box-Cox transformation is applied to the data and then an additive ETS is applied: 
+
+```{r}
+lambda <- BoxCox.lambda(visitors) #Gather Lambda
+boxCox <- BoxCox(visitors,lambda) #Apply Box-Cox transform
+fitBoxCoxEts <- ets(boxCox, model = "AAZ") 
+```
+
+(3) Get an STL decomposition of the Box-Cox transformed data, then apply an ETS model to the seasonal data: 
+```{r}
+stl <- decompose(boxCox) #Decompose the box-cox data 
+seasonalData <- stl$seasonal #take the seasonal portion
+fitSeasonalETS <- ets(seasonalData)
+```
+
+(g) We look at the residuals diagnostics for each of the fits. Firstly the Holts-Winters Multiplicative method:
+
+```{r}
+checkresiduals(fit)
+```
+The residuals appear to be uncorrelated, with a mean of roughly zero. However the variance at the beginning appears to be a bit larger than the rest of the graph. The residuals also appear to be normally correlated 
+
+
+Next the Damped Method: 
+
+```{r}
+checkresiduals(fitDamped)
+```
+
+The Exponential Case: 
+
+```{r}
+checkresiduals(fitExp)
+```
+
+Once again in both the damped and the exponential case the residuals appear uncorrelated, with a slightly larger variance at the beginning and are normally distributed
+
+```{r}
+checkresiduals(fitEts)
+```
+
+The ETS model residuals are really promising showing no correlation, seemingly constance variance a mean of roughly zero and very normally distributed 
+
+```{r}
+checkresiduals(fitBoxCoxEts)
+```
+
+In the case of Box-Cox transformed ETS model the variance of the residuals appear to increase with time
+
+```{r}
+checkresiduals(fitSeasonalETS)
+```
+
+In this case the residuals do not appear to be normally distributed and a lot of the ACF values lie outside the dashed blue lines
+
+We can then take a look at the forecasts for the fits for the next two years.
+
+```{r}
+plot(forecast(fit, h=24))
+```
+
+
+```{r}
+plot(forecast(fitBoxCoxEts, h=24))
+```
+
+```{r}
+plot(forecast(fitSeasonalETS, h=24))
+```
+
+```{r}
+plot(forecast(fitEts, h=24))
+```
+
+From looking at the residuals and the forecasts plots the most promising model is the ETS model which can be seen above. The residual diagnostics are very promising and the forecasts in this case then to follow the general shape of the preceding data while also following the upward trend.
+

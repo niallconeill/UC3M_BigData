@@ -1,0 +1,238 @@
+---
+title: "Assignment 1"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+#Dynamic Models for Prediction 
+
+
+##Exercise 1 
+
+<strong> <p>For each of the following series, make a graph of the data with forecasts using the most appropriate of the four benchmark methods: mean, naive, seasonal naive or drift.</strong> </p>
+
+<p>(a)<strong> Monthly total of people on unemployed benefits in Australia (January 1956 July 1992). Data set dole.</strong> </p>
+
+<p>(b)<strong> Annual Canadian lynx trappings (1821-1934). Data set lynx.
+In each case, do you think the forecasts are reasonable? If not, how could they be improved? </strong></p> <br>
+
+First we must load the relevant librarys for the datasets that we will be using:
+
+```{r message=FALSE, warning=FALSE}
+library(fpp)
+```
+
+(a) For the <strong>dole</strong> dataset, the forecasts for each of the four benchmarking methods are calculated. In this case the forecasts are for the next 3 years: 
+
+```{r}
+doleMean <- meanf(dole, h=36)
+doleNaive <- naive(dole,h=36)
+doleSnaive <- snaive(dole,h=36)
+doleDrift <- rwf(dole,drift = TRUE, h=36, level=0)
+```
+
+This is then plotted along with the <strong>dole</strong> data to view the forecasts: 
+
+```{r}
+plot(doleDrift, xlab="Time", ylab="Number of People on Unemployment Benefits",
+     main="Monthly Total of People on Unemployment Benefits in Australia")
+lines(doleMean$mean, xlab='', ylab='',main='',col="green")
+lines(doleNaive$mean, xlab='', ylab='',main='',col="red")
+lines(doleSnaive$mean, xlab='', ylab='',main='',col="purple")
+legend("topleft", legend=c("Drift","Mean","Naive", "Seasonal Naive"),
+       col = c("blue","green","red","purple"), lty=1, cex=0.5)
+```
+
+(b) Next once again the forecasts are calculated for the <strong>lynx</strong> dataset. This time the forecast was gathered for 10 years: 
+
+```{r}
+lynxMean <- meanf(lynx, h=10)
+lynxNaive <- naive(lynx,h=10)
+lynxSnaive <- snaive(lynx,h=10)
+lynxDrift <- rwf(lynx,drift = TRUE, h=10, level=0)
+```
+
+The forecasts were plotted to show the following graph: 
+
+```{r}
+plot(lynxDrift, xlab="Year", ylab="Number of Lynx Trapped",
+     main="Annual Number of Lynx Trapped in McKenzie River District")
+lines(lynxMean$mean, xlab='', ylab='',main='',col="green")
+lines(lynxNaive$mean, xlab='', ylab='',main='',col="red")
+lines(lynxSnaive$mean, xlab='', ylab='',main='',col="purple")
+legend("topleft", legend=c("Drift","Mean","Naive", "Seasonal Naive"), 
+       col = c("blue","green","red","purple"), lty=1, cex=0.5)
+```
+
+In both cases it doesnt not appear that the forecast for the mean method is likely to give a good representation of future data. The other methods seem to plot points closer to where the trend was at the end of the dataset. To improve this it maybe more beneficial to separate the data into a training and test set. Training a model with the training set and then applying this to the test set. From this you could see which of the methods appears to be the most accurate for future forecasts.
+
+## Exercise 2
+
+<strong> Consider the daily IBM stock prices (data set ibmclose).<br>
+
+(a) Produce some plots of the data in order to become familiar with it.<br>
+
+(b) Split the data into a training set of 300 observations and a test set of 69 observations.<br>
+
+(c) Try various benchmark methods to forecast the training set and compare the results on the test set. Which method did best? <br>
+
+(d) For the best method, compute the residuals and plot them. What do the plots tell you? </strong>
+
+
+(a) Here you can see a plot of the IBM stock data:
+
+```{r}
+plot(ibmclose, xlab="Day", ylab="Closing Stock Price",
+     main="Daily Closing IBM Stock Price")
+```
+
+(b) We split the dataset into the training and test set using: 
+
+```{r}
+training <- window(ibmclose, end=300)
+test <- window(ibmclose, start=301)
+```
+
+If we then plot the split data: 
+
+```{r}
+plot(ibmclose)
+lines(training,col="red")
+lines(test, col="blue")
+```
+
+
+(c) A number of benchmark methods are applied to the training set: 
+
+```{r}
+mean <- meanf(training, h=69)
+naive <- naive(training,h=69)
+snaive <- snaive(training,h=69)
+drift <- rwf(training,drift = TRUE, h=69, level=0)
+```
+
+We can then plot these forcasts with the training data: 
+
+```{r}
+plot(drift, xlab="Time",ylab="Value $", main= "Dow Jones index")
+lines(naive$mean, xlab="",ylab="",main="",col="green")
+lines(mean$mean, xlab="",ylab="",main="",col="red")
+lines(snaive$mean, xlab="",ylab="",main="",col="purple")
+lines(test, col="brown")
+legend("topleft",legend = c("Drift", "Naive", "Mean","Seasonal naive","Test set"), 
+       col=c("blue","green","red","yellow","brown"),lty=1,cex=0.5)
+```
+
+The forcasting method accuracies are then checked through comparasion with the test set: 
+
+```{r}
+accuracy(mean, test)
+```
+```{r}
+accuracy(naive, test)
+```
+
+```{r}
+accuracy(snaive, test)
+```
+
+```{r}
+accuracy(drift, test)
+```
+
+The method that performed the best was the drift method as this method's forecast had the lowest errors with comparision to the test set.
+
+(d) As the drift method was the best performing, we take this forecast, compute the residuals and plot them: 
+
+```{r}
+res <- residuals(drift)
+checkresiduals(res)
+```
+
+From looking at the ACF plot appears that most of the residual points lie within the dashed blue lines which shows that they are likely white noise. The residuals also appear to be uncorrelated with a mean of roughly zero. 
+
+We can also look at the histogram to see that the residuals are approximately normally distributed.
+
+Evidence that the residuals are white noise can be supported by using the Box-Pierce test:
+
+```{r}
+Box.test(res, lag = 10, fitdf = 0)
+```
+
+And the Box-Ljung test 
+```{r}
+Box.test(res, lag = 10, fitdf = 0, type = "Lj")
+```
+
+
+## Exercise 3.
+<strong> The data below represent the monthly sales (in thousands) of product A for a plastics manufacturer
+for years 1 through 5 (data set plastics).
+
+(a) Plot the time series of sales of product A. Can you identify the seasonal fluctuations and/or a trend?
+(b) Use an STL decomposition to calculate the trend-cycle and seasonal indices. (Experiment with
+having fixed or changing seasonality).
+(c) Do the results support the graphical interpretation form part (a)?
+(d) Compute and plot the seasonally adjusted data.
+(e) Use a random walk to produce forecasts of the seasonally adjusted data.
+(f) Reseasonilize the results to give forecasts on the original scale.
+[Hint: you can also use the stlf function with method="naive".] </strong>
+
+
+(a) The time series of the sales of product A can be plotted with 
+
+```{r}
+plot(plastics, xlab="Time", ylab="Sales of Product A", main="Monthly Sales of Product A")
+```
+
+The sales appear to have an upward trend with a seasonal fluctuations with a period of 1 year 
+
+(b) The STL decomposition of the plastics data with fixed seasonality can be seen using: 
+
+```{r}
+fixedFit <- stl(plastics, s.window="periodic", robust=TRUE)
+plot(fixedFit)
+```
+
+The STL decompostion for changing seasonality is calculated with: 
+
+```{r}
+seasonalFit <- stl(plastics, s.window=13 , robust=TRUE)
+plot(seasonalFit)
+```
+
+(c) Looking at the seasonal section of the STL decomposition plot it can be seen that the data does appear to have a year long seasonal cycle. Looking at the trend it can be seen that it increasing trend however at the end it appears that the trend begins to fall. 
+
+(d) The seasonally adjust data can is calculated and plotted alongside the original data. This is done for the fixed seasonality using: 
+
+```{r}
+eeadjFixed <- seasadj(fixedFit)
+plot(plastics, ylab="Sales of Product A", col="gray", main="Monthly Sales of Product A")
+lines(eeadjFixed, col="red")
+
+```
+
+and for the data with changing seasonality using: 
+
+```{r}
+eeadjSeasonal <- seasadj(seasonalFit)
+plot(plastics, ylab="Sales of Product A", col="gray", main="Monthly Sales of Product A")
+lines(eeadjSeasonal, col="red")
+```
+
+(e) We can produce forcasts for the seasonaly adjusted data using the naive method with: 
+
+```{r}
+fcast <- forecast(fixedFit, method="naive")
+plot(fcast, ylab="Sales of Product A")
+```
+
+(f) Finally, forcasts can be made with the seasonalized data using: 
+
+```{r}
+fcast <- stlf(plastics, method="naive")
+plot(fcast, ylab="Sales of Product A")
+```
+
